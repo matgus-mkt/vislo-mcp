@@ -1,0 +1,128 @@
+<!--
+  INSTRUÇÃO DE INTEGRAÇÃO — admin.html
+  =====================================
+  1. No nav lateral, adicione o botão na seção de conta:
+     Procure por: onclick="mobileNav(()=>showSection('account'))"
+     Abaixo da seção "account", adicione um botão para "integration"
+
+  2. No switch de showSection(), adicione o case 'integration'.
+
+  3. Cole a função showIntegration() no bloco <script>.
+
+  As 3 partes estão abaixo.
+-->
+
+
+<!-- ── PARTE 1: botão no nav (dentro do sidebar, perto de "Minha conta") ── -->
+<!--
+  Procure pela linha:
+    <button class="btn-logout" ... onclick="mobileNav(()=>showSection('account'))">Minha conta</button>
+  
+  NÃO precisa adicionar botão extra no sidebar. A seção de integração
+  fica DENTRO da tela de "Minha conta". Veja a Parte 3.
+-->
+
+
+<!-- ── PARTE 2: case no showSection() ── -->
+<!--
+  Dentro da função showSection(name), adicione:
+    case 'integration': showIntegration(); break;
+  
+  Ou simplesmente adicione o bloco de integração dentro de showAccount().
+-->
+
+
+<!-- ── PARTE 3: função a adicionar no <script> ── -->
+<script>
+// ── INTEGRAÇÃO MCP (Claude) ────────────────────────────────────────────────
+// Adicione esta função ao bloco <script> existente do admin.html
+
+async function showIntegrationToken() {
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) return;
+
+  const token    = session.access_token;
+  const short    = token.slice(0, 40) + '...';
+  const mcpUrl   = 'https://vislo-mcp.up.railway.app'; // ← atualizar após deploy
+
+  // Injeta um card na seção de conta (chame esta função dentro de showAccount())
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `
+    <div style="
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:1.25rem;
+      margin-top:1.5rem;
+    ">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.75rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        <span style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--text);">Integração com Claude</span>
+      </div>
+
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.6;">
+        Conecte o Vislo ao Claude.ai para criar projetos, registrar eventos e gerar relatórios por chat.
+        Siga os passos abaixo.
+      </p>
+
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">
+          1. URL do servidor MCP
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <code style="
+            flex:1;background:var(--bg);border:1px solid var(--border);
+            border-radius:6px;padding:8px 12px;font-size:12px;
+            color:var(--accent);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+          ">${mcpUrl}</code>
+          <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${mcpUrl}').then(()=>toast('URL copiada!'))">
+            Copiar
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">
+          2. Seu token de integração
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <code id="mcp-token-display" style="
+            flex:1;background:var(--bg);border:1px solid var(--border);
+            border-radius:6px;padding:8px 12px;font-size:11px;
+            color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+          ">${short}</code>
+          <button class="btn btn-secondary btn-sm" onclick="
+            navigator.clipboard.writeText('${token}').then(()=>toast('Token copiado!'))
+          ">Copiar</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">
+          ⚠️ Não compartilhe este token. Ele expira automaticamente e pode ser renovado fazendo logout e login novamente.
+        </div>
+      </div>
+
+      <div style="
+        background:var(--bg);border:1px solid var(--border);
+        border-radius:8px;padding:12px;
+        font-size:12px;color:var(--muted);line-height:1.8;
+      ">
+        <strong style="color:var(--text);display:block;margin-bottom:4px;">Como conectar:</strong>
+        1. Acesse <strong style="color:var(--text);">claude.ai → Settings → Integrations</strong><br>
+        2. Clique em <strong style="color:var(--text);">+ Add Custom Integration</strong><br>
+        3. Nome: <code style="color:var(--accent);">Vislo</code> — URL: cole a URL acima<br>
+        4. Quando solicitado, cole seu token como <code style="color:var(--accent);">Bearer token</code>
+      </div>
+    </div>
+  `;
+
+  // Append dentro da seção de conta
+  const accountSection = document.getElementById('main-content');
+  if (accountSection) accountSection.appendChild(wrap);
+}
+
+// ── CHAMADA: adicione showIntegrationToken() no final de showAccount() ──
+// A função showAccount() já renderiza o HTML da conta.
+// Após o innerHTML ser setado, chame: showIntegrationToken();
+</script>
