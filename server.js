@@ -1,6 +1,6 @@
 /**
  * Vislo MCP Server v1.0
- * Remote MCP server — conecta o Claude ao Vislo via Supabase JWT.
+ * Remote MCP server — conecta o Claude e o ChatGPT ao Vislo via Supabase JWT.
  *
  * Deploy: Railway / Render (free tier)
  * Auth: Bearer <supabase-access-token>
@@ -346,7 +346,7 @@ app.head('/', (_, res) => {
   res.sendStatus(200);
 });
 
-// Root GET — discovery para ChatGPT e outros clientes
+// Root GET — discovery para Claude, ChatGPT e outros clientes
 app.get('/', (_, res) => {
   res.setHeader('MCP-Protocol-Version', '2025-06-18');
   res.json({ status: 'ok', service: 'vislo-mcp', version: '1.0.0' });
@@ -354,10 +354,10 @@ app.get('/', (_, res) => {
 
 // MCP endpoint principal
 app.post('/', async (req, res) => {
-  app.post('/', async (req, res) => {
   if (!req.headers['accept']) {
     req.headers['accept'] = 'application/json, text/event-stream';
   }
+
   const message = req.body;
   const isHandshake = ['initialize', 'notifications/initialized'].includes(message?.method);
 
