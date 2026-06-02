@@ -346,6 +346,12 @@ app.head('/', (_, res) => {
   res.sendStatus(200);
 });
 
+// Root GET — discovery para ChatGPT e outros clientes
+app.get('/', (_, res) => {
+  res.setHeader('MCP-Protocol-Version', '2025-06-18');
+  res.json({ status: 'ok', service: 'vislo-mcp', version: '1.0.0' });
+});
+
 // MCP endpoint principal
 app.post('/', async (req, res) => {
   const message = req.body;
