@@ -328,12 +328,16 @@ function createServer(userJwt, userEmail) {
 const app = express();
 app.use(express.json());
 
-// CORS
+// CORS + Accept fix para ChatGPT
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Mcp-Session-Id');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
+  // ChatGPT não envia Accept correto — injeta antes do transport processar
+  if (req.method === 'POST' && !req.headers['accept']?.includes('text/event-stream')) {
+    req.headers['accept'] = 'application/json, text/event-stream';
+  }
   next();
 });
 
