@@ -354,6 +354,10 @@ app.get('/', (_, res) => {
 
 // MCP endpoint principal
 app.post('/', async (req, res) => {
+  app.post('/', async (req, res) => {
+  if (!req.headers['accept']) {
+    req.headers['accept'] = 'application/json, text/event-stream';
+  }
   const message = req.body;
   const isHandshake = ['initialize', 'notifications/initialized'].includes(message?.method);
 
