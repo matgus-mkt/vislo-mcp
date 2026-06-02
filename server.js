@@ -358,29 +358,39 @@ app.get('/', (_, res) => {
 
 // MCP endpoint principal
 app.post('/', async (req, res) => {
-  if (!req.headers['accept']) {
-    req.headers['accept'] = 'application/json, text/event-stream';
-  }
-
   const message = req.body;
-  const isHandshake = ['initialize', 'notifications/initialized'].includes(message?.method);
 
-  let userJwt   = null;
-  let userEmail = 'unknown';
-
-  if (!isHandshake) {
-    const auth = req.headers['authorization'] || '';
-    if (!auth.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Token ausente. Use: Authorization: Bearer <token-vislo>' });
-    }
-    userJwt = auth.slice(7).trim();
-
-    const user = await getUser(userJwt).catch(() => null);
-    if (!user?.email) {
-      return res.status(401).json({ error: 'Token inválido ou expirado. Gere um novo token no Vislo.' });
-    }
-    userEmail = user.email;
+  // Handshake initialize — responde diretamente sem passar pelo transport
+  if (message?.method === 'initialize') {
+    return res.json({
+      jsonrpc: '2.0',
+      id: message.id,
+      result: {
+        protocolVersion: '2025-06-18',
+        capabilities: { tools: { listChanged: true } },
+        serverInfo: { name: 'vislo', version: '1.0.0' },
+      },
+    });
   }
+
+  if (message?.method === 'notifications/initialized') {
+    return res.status(200).end();
+  }
+
+  const auth = req.headers['authorization'] || '';
+  if (!auth.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Token ausente. Use: Authorization: Bearer <token-vislo>' });
+  }
+  const userJwt = auth.slice(7).trim();
+
+  const user = await getUser(userJwt).catch(() => null);
+  if (!user?.email) {
+    return res.status(401).json({ error: 'Token inválido ou expirado. Gere um novo token no Vislo.' });
+  }
+  const userEmail = user.email;
+
+  // Garante Accept header para o transport
+  req.headers['accept'] = 'application/json, text/event-stream';
 
   const mcpServer = createServer(userJwt, userEmail);
   const transport = new StreamableHTTPServerTransport({
